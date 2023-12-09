@@ -11,8 +11,15 @@ CREATE TABLE items (
     length_meters float8 NOT NULL,
     width_meters float8 NOT NULL,
     height_meters float8 NOT NULL,
-    weight_kg float8 NOT NULL,
-    count INT NOT NULL,
+    weight_kg float8 NOT NULL
+);
 
-    CONSTRAINT items_count_must_be_non_negative CHECK(count > 0)
-)
+CREATE TABLE storehouses_items (
+    id BIGSERIAL PRIMARY KEY,
+    storehouse_id TEXT REFERENCES storehouses (id) NOT NULL,
+    item_id TEXT REFERENCES items (id) NOT NULL,
+    items_count INT NOT NULL,
+
+    CONSTRAINT items_count_must_be_non_negative CHECK(items_count > 0),
+    CONSTRAINT storehouse_and_item_ids_non_repeatable UNIQUE(storehouse_id, item_id)
+);
