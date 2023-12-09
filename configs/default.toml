@@ -1,0 +1,13 @@
+[server]
+listen_addr = "0.0.0.0"
+read_timeout_seconds = 5
+write_timeout_seconds = 1
+idle_timeout_seconds = 30
+
+[database]
+host = "db"
+port = 5432
+
+[logger]
+level = "debug"
+stack_trace_enabled = true
