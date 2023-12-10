@@ -9,8 +9,6 @@ import (
 	"github.com/adepte-myao/lamoda-test-2023/internal/reservation/core/domain"
 )
 
-// TODO: transactions
-
 type PostgresReservationRepository struct {
 	db *sql.DB
 }
@@ -53,14 +51,24 @@ func (repo PostgresReservationRepository) GetByID(ctx context.Context, id string
 }
 
 func (repo PostgresReservationRepository) Save(ctx context.Context, reservation domain.Reservation) error {
-	_, err := repo.db.ExecContext(ctx,
+	tx, err := repo.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelDefault, ReadOnly: false})
+	if err != nil {
+		return fmt.Errorf("starting transaction: %w", err)
+	}
+
+	defer func() {
+		// TODO
+		_ = tx.Rollback()
+	}()
+
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO reservations (id, destination_latitude, destination_longitude) VALUES ($1, $2, $3)`,
 		reservation.ID, reservation.DestinationLocation.Latitude, reservation.DestinationLocation.Longitude)
 	if err != nil {
 		return fmt.Errorf("inserting into reservations table: %w", err)
 	}
 
-	stmt, err := repo.db.PrepareContext(ctx,
+	stmt, err := tx.PrepareContext(ctx,
 		`INSERT INTO reservation_items (reservation_id, item_id, storehouse_id, items_count) VALUES ($1, $2, $3, $4)`)
 	if err != nil {
 		return fmt.Errorf("preparing statement for reservation_items: %w", err)
@@ -74,16 +82,26 @@ func (repo PostgresReservationRepository) Save(ctx context.Context, reservation 
 		}
 	}
 
-	resultErr = errors.Join(resultErr, stmt.Close())
+	resultErr = errors.Join(resultErr, tx.Commit())
 	if resultErr != nil {
-		return fmt.Errorf("statement work: %w", err)
+		return fmt.Errorf("statement work and transaction commitment: %w", err)
 	}
 
 	return nil
 }
 
 func (repo PostgresReservationRepository) Update(ctx context.Context, reservation domain.Reservation) error {
-	_, err := repo.db.ExecContext(ctx,
+	tx, err := repo.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelDefault, ReadOnly: false})
+	if err != nil {
+		return fmt.Errorf("starting transaction: %w", err)
+	}
+
+	defer func() {
+		// TODO
+		_ = tx.Rollback()
+	}()
+
+	_, err = tx.ExecContext(ctx,
 		`UPDATE reservations SET destination_latitude = $2, destination_longitude = $3 WHERE id = $1`,
 		reservation.ID, reservation.DestinationLocation.Latitude, reservation.DestinationLocation.Longitude)
 	if err != nil {
@@ -91,13 +109,13 @@ func (repo PostgresReservationRepository) Update(ctx context.Context, reservatio
 	}
 
 	// TODO: calculate changes instead of deleting-inserting all content
-	_, err = repo.db.ExecContext(ctx,
+	_, err = tx.ExecContext(ctx,
 		`DELETE FROM reservation_items WHERE reservation_id = $1`, reservation.ID)
 	if err != nil {
 		return fmt.Errorf("deleting associated reservation_items: %w", err)
 	}
 
-	stmt, err := repo.db.PrepareContext(ctx,
+	stmt, err := tx.PrepareContext(ctx,
 		`INSERT INTO reservation_items (reservation_id, item_id, storehouse_id, items_count) VALUES ($1, $2, $3, $4)`)
 	if err != nil {
 		return fmt.Errorf("preparing statement for reservation_items: %w", err)
@@ -111,9 +129,9 @@ func (repo PostgresReservationRepository) Update(ctx context.Context, reservatio
 		}
 	}
 
-	resultErr = errors.Join(resultErr, stmt.Close())
+	resultErr = errors.Join(resultErr, tx.Commit())
 	if resultErr != nil {
-		return fmt.Errorf("statement work: %w", err)
+		return fmt.Errorf("statement work and transaction commitment: %w", err)
 	}
 
 	return nil

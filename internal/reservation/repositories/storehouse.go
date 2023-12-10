@@ -8,8 +8,6 @@ import (
 	"github.com/adepte-myao/lamoda-test-2023/internal/reservation/core/domain"
 )
 
-// TODO: transactions
-
 type PostgresStorehouseRepository struct {
 	db *sql.DB
 }
@@ -79,13 +77,23 @@ func (repo PostgresStorehouseRepository) GetAllAsMap(ctx context.Context) (map[d
 }
 
 func (repo PostgresStorehouseRepository) UpdateAll(ctx context.Context, storehouses map[domain.StoreHouseID]domain.StoreHouse) error {
+	tx, err := repo.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelDefault, ReadOnly: false})
+	if err != nil {
+		return fmt.Errorf("starting transaction: %w", err)
+	}
+
+	defer func() {
+		// TODO
+		_ = tx.Rollback()
+	}()
+
 	//TODO: make better query instead of multiple delete-insert. Maybe domain logic is the one that should be changed
-	deleteStmt, err := repo.db.PrepareContext(ctx, `DELETE FROM storehouses_items WHERE storehouse_id = $1`)
+	deleteStmt, err := tx.PrepareContext(ctx, `DELETE FROM storehouses_items WHERE storehouse_id = $1`)
 	if err != nil {
 		return fmt.Errorf("preparing deletion query: %w", err)
 	}
 
-	insertStmt, err := repo.db.PrepareContext(ctx,
+	insertStmt, err := tx.PrepareContext(ctx,
 		`INSERT INTO storehouses_items (storehouse_id, item_id, items_count) VALUES ($1, $2, $3)`)
 	if err != nil {
 		return fmt.Errorf("preparing insertion query: %w", err)
@@ -103,6 +111,11 @@ func (repo PostgresStorehouseRepository) UpdateAll(ctx context.Context, storehou
 				return fmt.Errorf("inserting: %w", err)
 			}
 		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("transaction commit: %w", err)
 	}
 
 	return nil

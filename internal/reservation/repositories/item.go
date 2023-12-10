@@ -8,8 +8,6 @@ import (
 	"github.com/adepte-myao/lamoda-test-2023/internal/reservation/core/domain"
 )
 
-// TODO: transactions
-
 type PostgresItemRepository struct {
 	db *sql.DB
 }
