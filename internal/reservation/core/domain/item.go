@@ -3,10 +3,10 @@ package domain
 type ItemID string
 
 type Item struct {
-	ID              ItemID
-	Name            string
-	Size            Size
-	WeightKilograms float64
+	ID              ItemID  `json:"id"`
+	Name            string  `json:"name"`
+	Size            Size    `json:"size"`
+	WeightKilograms float64 `json:"weightKilograms"`
 }
 
 func (item *Item) VolumeM2() float64 {
@@ -14,7 +14,7 @@ func (item *Item) VolumeM2() float64 {
 }
 
 type Size struct {
-	LengthMeters float64
-	WidthMeters  float64
-	HeightMeters float64
+	LengthMeters float64 `json:"lengthMeters"`
+	WidthMeters  float64 `json:"widthMeters"`
+	HeightMeters float64 `json:"heightMeters"`
 }

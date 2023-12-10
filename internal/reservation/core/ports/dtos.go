@@ -11,6 +11,7 @@ type ReleaseRequestDTO struct {
 
 type ReservationResponseDTO struct {
 	Reservation domain.Reservation `json:"reservation"`
+	TotalCost   float64            `json:"totalCost"`
 }
 
 type GetUnreservedRequestDTO struct {

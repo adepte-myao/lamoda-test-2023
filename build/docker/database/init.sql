@@ -20,6 +20,22 @@ CREATE TABLE storehouses_items (
     item_id TEXT REFERENCES items (id) NOT NULL,
     items_count INT NOT NULL,
 
-    CONSTRAINT items_count_must_be_non_negative CHECK(items_count > 0),
+    CONSTRAINT storehouse_items_count_must_be_non_negative CHECK(items_count > 0),
     CONSTRAINT storehouse_and_item_ids_non_repeatable UNIQUE(storehouse_id, item_id)
 );
+
+CREATE TABLE reservations (
+    id TEXT PRIMARY KEY,
+    destination_latitude float8 NOT NULL,
+    destination_longitude float8 NOT NULL
+);
+
+CREATE TABLE reservation_items (
+    id BIGSERIAL PRIMARY KEY,
+    reservation_id TEXT REFERENCES reservations (id) NOT NULL,
+    item_id TEXT REFERENCES items (id) NOT NULL,
+    storehouse_id TEXT REFERENCES storehouses (id) NOT NULL,
+    items_count INT NOT NULL,
+
+    CONSTRAINT reservation_items_count_must_be_non_negative CHECK(items_count > 0)
+)

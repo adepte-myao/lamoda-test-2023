@@ -14,6 +14,6 @@ type StoreHouse struct {
 }
 
 type ItemData struct {
-	Item  Item
-	Count int
+	Item  Item `json:"item"`
+	Count int  `json:"count"`
 }

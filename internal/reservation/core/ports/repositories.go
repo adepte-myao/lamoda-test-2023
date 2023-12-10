@@ -5,10 +5,19 @@ import (
 )
 
 type StorehouseRepository interface {
-	GetStorehouseByID(id domain.StoreHouseID) domain.StoreHouse
-	GetAllStorehousesWithoutItemsAsMap() map[domain.StoreHouseID]domain.StoreHouse
+	GetByID(id domain.StoreHouseID) (domain.StoreHouse, error)
+	GetUnreservedItemsByID(id domain.StoreHouseID) (map[domain.ItemID]domain.ItemData, error)
+	GetAllAsMap() (map[domain.StoreHouseID]domain.StoreHouse, error)
+	UpdateAll(storehouses map[domain.StoreHouseID]domain.StoreHouse) error
 }
 
 type ItemsRepository interface {
-	GetAllAsMap() map[domain.ItemID]domain.Item
+	GetAllAsMap() (map[domain.ItemID]domain.Item, error)
+}
+
+type ReservationRepository interface {
+	GetByID(id string) (domain.Reservation, error)
+	Save(reservation domain.Reservation) error
+	Update(reservation domain.Reservation) error
+	Delete(id string) error
 }
