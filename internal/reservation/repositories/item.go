@@ -26,6 +26,8 @@ func (repo PostgresItemRepository) GetAllAsMap(ctx context.Context) (map[domain.
 	items := make(map[domain.ItemID]domain.Item)
 	for rows.Next() {
 		var item domain.Item
+		item.Size = &domain.Size{}
+
 		err = rows.Scan(&item.ID, &item.Name,
 			&item.Size.LengthMeters, &item.Size.WidthMeters, &item.Size.HeightMeters, &item.WeightKilograms)
 		if err != nil {

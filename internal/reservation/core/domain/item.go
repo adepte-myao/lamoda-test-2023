@@ -5,7 +5,7 @@ type ItemID string
 type Item struct {
 	ID              ItemID  `json:"id"`
 	Name            string  `json:"name,omitempty"`
-	Size            Size    `json:"size,omitempty"`
+	Size            *Size   `json:"size,omitempty"`
 	WeightKilograms float64 `json:"weightKilograms,omitempty"`
 }
 

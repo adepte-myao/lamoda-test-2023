@@ -83,16 +83,16 @@ func getReservedItemsAndStorehouses() ([]ReserveEntry, map[StoreHouseID]StoreHou
 
 	storehouses := map[StoreHouseID]StoreHouse{
 		"a": {ID: "a", Name: "a", Location: Location{Latitude: 50, Longitude: 50}, ItemsData: map[ItemID]ItemData{
-			"1": {Item: Item{ID: "1", Name: "1", Size: sizes[0], WeightKilograms: 1}, Count: 2},
-			"3": {Item: Item{ID: "3", Name: "3", Size: sizes[2], WeightKilograms: 3}, Count: 7},
-			"5": {Item: Item{ID: "5", Name: "5", Size: sizes[4], WeightKilograms: 5}, Count: 1},
-			"6": {Item: Item{ID: "6", Name: "6", Size: sizes[5], WeightKilograms: 6}, Count: 6},
-			"8": {Item: Item{ID: "8", Name: "8", Size: sizes[7], WeightKilograms: 8}, Count: 3},
+			"1": {Item: Item{ID: "1", Name: "1", Size: &sizes[0], WeightKilograms: 1}, Count: 2},
+			"3": {Item: Item{ID: "3", Name: "3", Size: &sizes[2], WeightKilograms: 3}, Count: 7},
+			"5": {Item: Item{ID: "5", Name: "5", Size: &sizes[4], WeightKilograms: 5}, Count: 1},
+			"6": {Item: Item{ID: "6", Name: "6", Size: &sizes[5], WeightKilograms: 6}, Count: 6},
+			"8": {Item: Item{ID: "8", Name: "8", Size: &sizes[7], WeightKilograms: 8}, Count: 3},
 		}},
 		"b": {ID: "b", Name: "b", Location: Location{Latitude: 60, Longitude: 60}, ItemsData: map[ItemID]ItemData{
-			"5": {Item: Item{ID: "5", Name: "5", Size: sizes[4], WeightKilograms: 5}, Count: 1},
-			"7": {Item: Item{ID: "7", Name: "7", Size: sizes[6], WeightKilograms: 7}, Count: 6},
-			"8": {Item: Item{ID: "8", Name: "8", Size: sizes[7], WeightKilograms: 8}, Count: 3},
+			"5": {Item: Item{ID: "5", Name: "5", Size: &sizes[4], WeightKilograms: 5}, Count: 1},
+			"7": {Item: Item{ID: "7", Name: "7", Size: &sizes[6], WeightKilograms: 7}, Count: 6},
+			"8": {Item: Item{ID: "8", Name: "8", Size: &sizes[7], WeightKilograms: 8}, Count: 3},
 		}},
 	}
 
@@ -115,7 +115,7 @@ func getItems() map[ItemID]Item {
 		items[itemID] = Item{
 			ID:              itemID,
 			Name:            string(itemID),
-			Size:            sizes[i],
+			Size:            &sizes[i],
 			WeightKilograms: float64(i + 1),
 		}
 	}
