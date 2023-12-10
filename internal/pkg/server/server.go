@@ -34,7 +34,7 @@ func New(config configs.AppConfig, handler http.Handler, logger logger.Logger) *
 }
 
 func (server *Server) Run() error {
-	sigChan := make(chan os.Signal)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	errChan := make(chan error)
