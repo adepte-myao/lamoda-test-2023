@@ -14,6 +14,10 @@ type PostgresItemRepository struct {
 	db *sql.DB
 }
 
+func NewPostgresItem(db *sql.DB) *PostgresItemRepository {
+	return &PostgresItemRepository{db: db}
+}
+
 func (repo PostgresItemRepository) GetAllAsMap(ctx context.Context) (map[domain.ItemID]domain.Item, error) {
 	rows, err := repo.db.QueryContext(ctx,
 		`SELECT id, name, length_meters, width_meters, height_meters, weight_kg FROM items`)

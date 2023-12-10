@@ -1,0 +1,275 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Reservation microservice",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/get-unreserved-items": {
+            "get": {
+                "description": "Returns all unreserved items for given storehouse",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservation"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "storehouse ID",
+                        "name": "storehouse-id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ports.GetUnreservedResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/release": {
+            "post": {
+                "description": "Releases items for given reservation. If there is no items left, deleted the reservation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservation"
+                ],
+                "parameters": [
+                    {
+                        "description": "reservation ID and items to release",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ports.ReleaseRequestDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ports.ReservationResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/reserve": {
+            "post": {
+                "description": "Creates a reservation for given items if storehouse have required amount",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservation"
+                ],
+                "parameters": [
+                    {
+                        "description": "destination location and items to reserve",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ReserveRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ports.ReservationResponseDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.Item": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "size": {
+                    "$ref": "#/definitions/domain.Size"
+                },
+                "weightKilograms": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.ItemData": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "item": {
+                    "$ref": "#/definitions/domain.Item"
+                }
+            }
+        },
+        "domain.Location": {
+            "type": "object",
+            "required": [
+                "latitude",
+                "longitude"
+            ],
+            "properties": {
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                }
+            }
+        },
+        "domain.Reservation": {
+            "type": "object",
+            "properties": {
+                "destinationLocation": {
+                    "$ref": "#/definitions/domain.Location"
+                },
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ReserveEntry"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ReserveEntry": {
+            "type": "object",
+            "required": [
+                "count",
+                "itemID"
+            ],
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "itemID": {
+                    "type": "string"
+                },
+                "sourceStorehouseID": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ReserveRequest": {
+            "type": "object",
+            "properties": {
+                "destinationLocation": {
+                    "$ref": "#/definitions/domain.Location"
+                },
+                "itemsToReserve": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ReserveEntry"
+                    }
+                }
+            }
+        },
+        "domain.Size": {
+            "type": "object",
+            "properties": {
+                "heightMeters": {
+                    "type": "number"
+                },
+                "lengthMeters": {
+                    "type": "number"
+                },
+                "widthMeters": {
+                    "type": "number"
+                }
+            }
+        },
+        "ports.GetUnreservedResponseDTO": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ItemData"
+                    }
+                },
+                "storehouseID": {
+                    "type": "string"
+                }
+            }
+        },
+        "ports.ReleaseRequestDTO": {
+            "type": "object",
+            "required": [
+                "reservationID"
+            ],
+            "properties": {
+                "itemsToRelease": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ReserveEntry"
+                    }
+                },
+                "reservationID": {
+                    "type": "string"
+                }
+            }
+        },
+        "ports.ReservationResponseDTO": {
+            "type": "object",
+            "properties": {
+                "reservation": {
+                    "$ref": "#/definitions/domain.Reservation"
+                },
+                "totalCost": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+}

@@ -7,5 +7,5 @@ import (
 type ReservationService interface {
 	Reserve(request domain.ReserveRequest) (ReservationResponseDTO, error)
 	Release(reservationID string, itemsToRelease []domain.ReserveEntry) (ReservationResponseDTO, error)
-	GetUnreserved(storehouseID domain.StoreHouseID, itemIDs []domain.ItemID) ([]domain.ItemData, error)
+	GetUnreserved(storehouseID domain.StoreHouseID) ([]domain.ItemData, error)
 }

@@ -15,6 +15,10 @@ type PostgresReservationRepository struct {
 	db *sql.DB
 }
 
+func NewPostgresReservation(db *sql.DB) *PostgresReservationRepository {
+	return &PostgresReservationRepository{db: db}
+}
+
 func (repo PostgresReservationRepository) GetByID(ctx context.Context, id string) (domain.Reservation, error) {
 	reservation := domain.Reservation{ID: id}
 
@@ -64,7 +68,7 @@ func (repo PostgresReservationRepository) Save(ctx context.Context, reservation 
 
 	var resultErr error
 	for _, entry := range reservation.Entries {
-		_, err = stmt.ExecContext(ctx, reservation.ID, entry.ItemID, entry.SourceStorehouseID, entry.ItemID)
+		_, err = stmt.ExecContext(ctx, reservation.ID, entry.ItemID, entry.SourceStorehouseID, entry.Count)
 		if err != nil {
 			resultErr = errors.Join(resultErr, fmt.Errorf("executing statement for reservation_items: %w", err))
 		}
@@ -101,7 +105,7 @@ func (repo PostgresReservationRepository) Update(ctx context.Context, reservatio
 
 	var resultErr error
 	for _, entry := range reservation.Entries {
-		_, err = stmt.ExecContext(ctx, reservation.ID, entry.ItemID, entry.SourceStorehouseID, entry.ItemID)
+		_, err = stmt.ExecContext(ctx, reservation.ID, entry.ItemID, entry.SourceStorehouseID, entry.Count)
 		if err != nil {
 			resultErr = errors.Join(resultErr, fmt.Errorf("executing statement for reservation_items: %w", err))
 		}

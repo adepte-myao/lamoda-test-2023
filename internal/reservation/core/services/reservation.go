@@ -14,6 +14,10 @@ type Service struct {
 	reservationRepo ports.ReservationRepository
 }
 
+func New(storehouseRepo ports.StorehouseRepository, itemsRepo ports.ItemsRepository, reservationRepo ports.ReservationRepository) *Service {
+	return &Service{storehouseRepo: storehouseRepo, itemsRepo: itemsRepo, reservationRepo: reservationRepo}
+}
+
 func (service Service) Reserve(request domain.ReserveRequest) (ports.ReservationResponseDTO, error) {
 	storehouses, err := service.storehouseRepo.GetAllAsMap(context.TODO())
 	if err != nil {
@@ -88,6 +92,8 @@ func (service Service) Release(reservationID string, itemsToRelease []domain.Res
 		if err != nil {
 			return ports.ReservationResponseDTO{}, fmt.Errorf("release: deleting reservation: %w", err)
 		}
+
+		reservation = domain.Reservation{}
 	} else {
 		err = service.reservationRepo.Update(context.TODO(), reservation)
 		if err != nil {
@@ -95,14 +101,9 @@ func (service Service) Release(reservationID string, itemsToRelease []domain.Res
 		}
 	}
 
-	var newStorehousesState map[domain.StoreHouseID]domain.StoreHouse
-	if needToDeleteReservation {
-		newStorehousesState = oldStorehousesState
-	} else {
-		newStorehousesState, err = reservation.GetUpdatedStorehouses(oldStorehousesState, domain.Reserve, items)
-		if err != nil {
-			return ports.ReservationResponseDTO{}, fmt.Errorf("release: calculating new storehouses state: %w", err)
-		}
+	newStorehousesState, err := reservation.GetUpdatedStorehouses(oldStorehousesState, domain.Reserve, items)
+	if err != nil {
+		return ports.ReservationResponseDTO{}, fmt.Errorf("release: calculating new storehouses state: %w", err)
 	}
 
 	err = service.storehouseRepo.UpdateAll(context.TODO(), newStorehousesState)
@@ -118,20 +119,14 @@ func (service Service) Release(reservationID string, itemsToRelease []domain.Res
 	return ports.ReservationResponseDTO{Reservation: reservation, TotalCost: totalCost}, nil
 }
 
-func (service Service) GetUnreserved(storehouseID domain.StoreHouseID, itemIDs []domain.ItemID) ([]domain.ItemData, error) {
+func (service Service) GetUnreserved(storehouseID domain.StoreHouseID) ([]domain.ItemData, error) {
 	allUnreserved, err := service.storehouseRepo.GetItemsByID(context.TODO(), storehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("get unreserved: receiving all unreserved: %w", err)
 	}
 
 	unreserved := make([]domain.ItemData, 0)
-	for _, itemID := range itemIDs {
-		itemData, ok := allUnreserved[itemID]
-		if !ok {
-			// TODO: should get any info about missing ones?
-			continue
-		}
-
+	for _, itemData := range allUnreserved {
 		unreserved = append(unreserved, itemData)
 	}
 

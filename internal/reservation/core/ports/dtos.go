@@ -15,8 +15,7 @@ type ReservationResponseDTO struct {
 }
 
 type GetUnreservedRequestDTO struct {
-	StorehouseID domain.StoreHouseID `json:"storehouseID" validate:"required"`
-	ItemIDs      []domain.ItemID     `json:"itemIDs"`
+	StorehouseID domain.StoreHouseID `form:"storehouse-id" validate:"required"`
 }
 
 type GetUnreservedResponseDTO struct {

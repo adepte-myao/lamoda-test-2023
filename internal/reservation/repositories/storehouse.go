@@ -14,6 +14,10 @@ type PostgresStorehouseRepository struct {
 	db *sql.DB
 }
 
+func NewPostgresStorehouse(db *sql.DB) *PostgresStorehouseRepository {
+	return &PostgresStorehouseRepository{db: db}
+}
+
 func (repo PostgresStorehouseRepository) GetItemsByID(ctx context.Context, id domain.StoreHouseID) (map[domain.ItemID]domain.ItemData, error) {
 	rows, err := repo.db.QueryContext(ctx,
 		`SELECT item_id, items_count FROM storehouses_items WHERE storehouse_id = $1`, id)
