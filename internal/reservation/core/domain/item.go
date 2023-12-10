@@ -4,9 +4,9 @@ type ItemID string
 
 type Item struct {
 	ID              ItemID  `json:"id"`
-	Name            string  `json:"name"`
-	Size            Size    `json:"size"`
-	WeightKilograms float64 `json:"weightKilograms"`
+	Name            string  `json:"name,omitempty"`
+	Size            Size    `json:"size,omitempty"`
+	WeightKilograms float64 `json:"weightKilograms,omitempty"`
 }
 
 func (item *Item) VolumeM2() float64 {

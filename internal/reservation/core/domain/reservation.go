@@ -79,7 +79,7 @@ func groupEntriesPerStorehouse(entries []ReserveEntry) map[StoreHouseID][]Reserv
 	return storehouseEntries
 }
 
-func (reservation *Reservation) GetUpdatedStorehouses(oldStorehouses map[StoreHouseID]StoreHouse, op OperationType) (map[StoreHouseID]StoreHouse, error) {
+func (reservation *Reservation) GetUpdatedStorehouses(oldStorehouses map[StoreHouseID]StoreHouse, op OperationType, items map[ItemID]Item) (map[StoreHouseID]StoreHouse, error) {
 	updatedSH := maps.Clone(oldStorehouses)
 	for storehouseID, storehouse := range oldStorehouses {
 		updatedStorehouse := updatedSH[storehouseID]
@@ -94,8 +94,15 @@ func (reservation *Reservation) GetUpdatedStorehouses(oldStorehouses map[StoreHo
 		}
 
 		itemData, ok := storehouse.ItemsData[entry.ItemID]
-		if !ok {
+		if !ok && op == Reserve {
 			return nil, fmt.Errorf("%w: %s", ErrUnknownItem, entry.ItemID)
+		}
+		// TODO: make simpler
+		if itemInfo, itemExists := items[entry.ItemID]; op == Release && !ok && itemExists {
+			itemData = ItemData{
+				Item:  itemInfo,
+				Count: 0,
+			}
 		}
 
 		if op == Reserve {
@@ -108,7 +115,12 @@ func (reservation *Reservation) GetUpdatedStorehouses(oldStorehouses map[StoreHo
 			itemData.Count += entry.Count
 		}
 
-		storehouse.ItemsData[entry.ItemID] = itemData
+		if itemData.Count == 0 {
+			delete(storehouse.ItemsData, entry.ItemID)
+		} else {
+			storehouse.ItemsData[entry.ItemID] = itemData
+		}
+
 		updatedSH[entry.SourceStorehouseID] = storehouse
 	}
 

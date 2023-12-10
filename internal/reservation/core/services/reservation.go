@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/adepte-myao/lamoda-test-2023/internal/reservation/core/domain"
@@ -14,7 +15,7 @@ type Service struct {
 }
 
 func (service Service) Reserve(request domain.ReserveRequest) (ports.ReservationResponseDTO, error) {
-	storehouses, err := service.storehouseRepo.GetAllAsMap()
+	storehouses, err := service.storehouseRepo.GetAllAsMap(context.TODO())
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: receiving storehouses: %w", err)
 	}
@@ -24,24 +25,24 @@ func (service Service) Reserve(request domain.ReserveRequest) (ports.Reservation
 		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: building reservation: %w", err)
 	}
 
-	updatedStorehouses, err := reservation.GetUpdatedStorehouses(storehouses, domain.Reserve)
+	items, err := service.itemsRepo.GetAllAsMap(context.TODO())
+	if err != nil {
+		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: receiving items: %w", err)
+	}
+
+	updatedStorehouses, err := reservation.GetUpdatedStorehouses(storehouses, domain.Reserve, items)
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: calculating storehouses state: %w", err)
 	}
 
-	err = service.storehouseRepo.UpdateAll(updatedStorehouses)
+	err = service.storehouseRepo.UpdateAll(context.TODO(), updatedStorehouses)
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: updating storehouses state: %w", err)
 	}
 
-	err = service.reservationRepo.Save(reservation)
+	err = service.reservationRepo.Save(context.TODO(), reservation)
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: saving reservation: %w", err)
-	}
-
-	items, err := service.itemsRepo.GetAllAsMap()
-	if err != nil {
-		return ports.ReservationResponseDTO{}, fmt.Errorf("reserve: receiving items: %w", err)
 	}
 
 	totalCost, err := reservation.GetTotalCost(storehouses, items)
@@ -53,17 +54,22 @@ func (service Service) Reserve(request domain.ReserveRequest) (ports.Reservation
 }
 
 func (service Service) Release(reservationID string, itemsToRelease []domain.ReserveEntry) (ports.ReservationResponseDTO, error) {
-	reservation, err := service.reservationRepo.GetByID(reservationID)
+	reservation, err := service.reservationRepo.GetByID(context.TODO(), reservationID)
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("release: receiving reservation: %w", err)
 	}
 
-	storehouses, err := service.storehouseRepo.GetAllAsMap()
+	storehouses, err := service.storehouseRepo.GetAllAsMap(context.TODO())
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("release: receiving storehouses: %w", err)
 	}
 
-	oldStorehousesState, err := reservation.GetUpdatedStorehouses(storehouses, domain.Release)
+	items, err := service.itemsRepo.GetAllAsMap(context.TODO())
+	if err != nil {
+		return ports.ReservationResponseDTO{}, fmt.Errorf("release: receiving items: %w", err)
+	}
+
+	oldStorehousesState, err := reservation.GetUpdatedStorehouses(storehouses, domain.Release, items)
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("release: calculating released storehouse state: %w", err)
 	}
@@ -78,12 +84,12 @@ func (service Service) Release(reservationID string, itemsToRelease []domain.Res
 	needToDeleteReservation := len(itemsToRelease) == 0 || len(reservation.Entries) == 0
 
 	if needToDeleteReservation {
-		err = service.reservationRepo.Delete(reservationID)
+		err = service.reservationRepo.Delete(context.TODO(), reservationID)
 		if err != nil {
 			return ports.ReservationResponseDTO{}, fmt.Errorf("release: deleting reservation: %w", err)
 		}
 	} else {
-		err = service.reservationRepo.Update(reservation)
+		err = service.reservationRepo.Update(context.TODO(), reservation)
 		if err != nil {
 			return ports.ReservationResponseDTO{}, fmt.Errorf("relese: updating reservation: %w", err)
 		}
@@ -93,20 +99,15 @@ func (service Service) Release(reservationID string, itemsToRelease []domain.Res
 	if needToDeleteReservation {
 		newStorehousesState = oldStorehousesState
 	} else {
-		newStorehousesState, err = reservation.GetUpdatedStorehouses(oldStorehousesState, domain.Reserve)
+		newStorehousesState, err = reservation.GetUpdatedStorehouses(oldStorehousesState, domain.Reserve, items)
 		if err != nil {
 			return ports.ReservationResponseDTO{}, fmt.Errorf("release: calculating new storehouses state: %w", err)
 		}
 	}
 
-	err = service.storehouseRepo.UpdateAll(newStorehousesState)
+	err = service.storehouseRepo.UpdateAll(context.TODO(), newStorehousesState)
 	if err != nil {
 		return ports.ReservationResponseDTO{}, fmt.Errorf("release: updating storehouse state: %w", err)
-	}
-
-	items, err := service.itemsRepo.GetAllAsMap()
-	if err != nil {
-		return ports.ReservationResponseDTO{}, fmt.Errorf("release: receiving items: %w", err)
 	}
 
 	totalCost, err := reservation.GetTotalCost(storehouses, items)
@@ -118,7 +119,7 @@ func (service Service) Release(reservationID string, itemsToRelease []domain.Res
 }
 
 func (service Service) GetUnreserved(storehouseID domain.StoreHouseID, itemIDs []domain.ItemID) ([]domain.ItemData, error) {
-	allUnreserved, err := service.storehouseRepo.GetUnreservedItemsByID(storehouseID)
+	allUnreserved, err := service.storehouseRepo.GetItemsByID(context.TODO(), storehouseID)
 	if err != nil {
 		return nil, fmt.Errorf("get unreserved: receiving all unreserved: %w", err)
 	}
